@@ -10,15 +10,16 @@ const RPC_URL = "https://rpc.sentry-01.theta-testnet.polypore.xyz";
 const denom = "uatom";
 
 const useCosmos = (rpcUrl: string = RPC_URL) => {
-  const [chainId, setChainId] = useState("");
+  const [chainId, setChainId] = useState<string>();
   const [walletBalance, setWalletBalance] = useState<string>();
-  const [walletAddress, setWalletAddress] = useState<string>("");
+  const [walletAddress, setWalletAddress] = useState<string>();
 
   const { toast } = useToast();
   useEffect(() => {
     const getChainId = async (client: StargateClient) => {
       const c = await client.getChainId();
       setChainId(c);
+      createSigningClient(c);
     };
     const init = async () => {
       getChainId(await StargateClient.connect(rpcUrl));
@@ -28,6 +29,24 @@ const useCosmos = (rpcUrl: string = RPC_URL) => {
 
     return () => clearTimeout(timeout);
   }, [rpcUrl]);
+
+  const createSigningClient = async (chainId: string) => {
+    // Create the signing client
+    const offlineSigner: OfflineSigner = (window as any).getOfflineSigner!(
+      chainId
+    );
+    const signingClient = await SigningStargateClient.connectWithSigner(
+      rpcUrl,
+      offlineSigner
+    );
+
+    // Get the address and balance of your user
+    const account: AccountData = (await offlineSigner.getAccounts())[0];
+    setWalletAddress(account.address);
+    const balance = (await signingClient.getBalance(account.address, "uatom"))
+      .amount;
+    setWalletBalance(balance);
+  };
 
   const disconnectKepler = async () => {
     const { keplr } = window as any;
@@ -56,22 +75,6 @@ const useCosmos = (rpcUrl: string = RPC_URL) => {
         console.log("Unexpected error", err);
       }
     }
-
-    // Create the signing client
-    const offlineSigner: OfflineSigner = (window as any).getOfflineSigner!(
-      chainId
-    );
-    const signingClient = await SigningStargateClient.connectWithSigner(
-      rpcUrl,
-      offlineSigner
-    );
-
-    // Get the address and balance of your user
-    const account: AccountData = (await offlineSigner.getAccounts())[0];
-    setWalletAddress(account.address);
-    const balance = (await signingClient.getBalance(account.address, "uatom"))
-      .amount;
-    setWalletBalance(balance);
   };
 
   return { chainId, walletAddress, walletBalance, connectKepler };

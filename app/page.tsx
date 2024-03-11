@@ -13,12 +13,12 @@ export default function Home() {
       <Toaster />
       <Navbar />
 
-      <section className="p-4">
+      <section className="p-8 space-y-8">
         <div>
-          Wallet Address: <p>{walletAddress}</p>
+          Wallet Address: <p className="font-semibold">{walletAddress}</p>
         </div>
         <div>
-          Wallet Balance: <p>{walletBalance}</p>
+          Wallet Balance: <p className="font-semibold">{walletBalance}</p>
         </div>
         <div>
           Chain Id: <p className="font-semibold">{chainId}</p>
